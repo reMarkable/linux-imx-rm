@@ -34,7 +34,7 @@ chmod +x remarkable-production-image-5.2.96-chiappa-public-x86_64-toolchain.sh
 ./remarkable-production-image-5.2.96-chiappa-public-x86_64-toolchain.sh
 
 # source sdk, assuming default path
-. /opt/codex/chiappa/5.2.96-dirty/environment-setup-cortexa55-remarkable-linux
+. /opt/codex/chiappa/5.2.96/environment-setup-cortexa55-remarkable-linux
 
 git clone git@github.com:reMarkable/linux-imx-rm.git && cd linux-imx-rm
 git checkout rmpp_6.6.52_v3.22.x
@@ -44,6 +44,37 @@ cd linux-imx-rel-5.2-rm-3.22.0.64-cc26ce6266b2
 make chiappa_defconfig
 make -j$(nproc)
 mkimage -f chiappa.its fitImage
+mkimage_imx8 -soc IMX9 -c -data fitImage a35 0x90000000 -out fitImage.ahab -images_hash sha256
+make INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=./output modules_install
+
+# deploy to target
+ssh root@10.11.99.1 mount -o remount, rw /
+rsync --archive --recursive --verbose fitImage.ahab root@10.11.99.1:/boot
+rsync --archive --recursive --verbose output/lib root@10.11.99.1:/usr/
+
+```
+
+# Build and deploy instructions Paper Pro Pure (example)
+
+```shell
+# fetch SDK
+wget https://storage.googleapis.com/remarkable-codex-toolchain/3.27.0.97/tatsu/remarkable-production-image-5.7.119-tatsu-public-x86_64-toolchain.sh
+chmod +x remarkable-production-image-5.7.119-tatsu-public-x86_64-toolchain.sh
+
+# install sdk
+./remarkable-production-image-5.7.119-tatsu-public-x86_64-toolchain.sh
+
+# source sdk, assuming default path
+. /opt/codex/tatsu/5.7.119/environment-setup-cortexa55-remarkable-linux
+
+git clone git@github.com:reMarkable/linux-imx-rm.git && cd linux-imx-rm
+git checkout rmpp_6.12.49_v3.27.x
+tar xzvf linux-imx-rel-5.7-wd-3.27.2.1-f21cbcc9ed9a.tar.gz
+cd linux-imx-rel-5.7-wd-3.27.2.1-f21cbcc9ed9a
+
+make tatsu_defconfig
+make -j$(nproc)
+mkimage -f tatsu.its fitImage
 mkimage_imx8 -soc IMX9 -c -data fitImage a35 0x90000000 -out fitImage.ahab -images_hash sha256
 make INSTALL_MOD_STRIP=1 INSTALL_MOD_PATH=./output modules_install
 
